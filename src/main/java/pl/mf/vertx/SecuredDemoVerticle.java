@@ -1,13 +1,17 @@
 package pl.mf.vertx;
 
+import java.nio.file.Paths;
+
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.http.ServerWebSocket;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.net.JksOptions;
 import io.vertx.ext.bridge.PermittedOptions;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
@@ -16,8 +20,11 @@ import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions;
 
 public class SecuredDemoVerticle extends AbstractVerticle {
 
-	private final static int WS_HTTP_REQ_PORT = 8091;
-	private final static int EVENTBUS_REQ_PORT = 8090;
+	private final static String KEYSTORE_FILE_NAME = PropertiesReaderUtil.getProperty("keystore-file-name");
+	private final static String KEYSTORE_PASSWORD =  PropertiesReaderUtil.getProperty("keystore-password");
+
+	private final static int WS_HTTP_REQ_PORT = Integer.parseInt(PropertiesReaderUtil.getProperty("ws-http-request-port"));
+	private final static int EVENTBUS_REQ_PORT = Integer.parseInt(PropertiesReaderUtil.getProperty("eventbus-request-port"));
 	private final static String EVENTBUS_ADDRESS = "demo-address";
 
 	public static void main(String[] args) {
@@ -28,10 +35,15 @@ public class SecuredDemoVerticle extends AbstractVerticle {
 	@Override
 	public void start(Future<Void> startFuture) throws Exception {
 		LogUtils.printMessageWithDate("Starting verticle...");
+		String pathToKeystore = Paths.get(ClassLoader.getSystemResource(KEYSTORE_FILE_NAME).toURI()).toString();
+		LogUtils.printMessageWithDate("Keystore path: " + pathToKeystore);
 
-		vertx.createHttpServer().requestHandler(getRouterWithConfiguredEventbus()::accept).listen(EVENTBUS_REQ_PORT);
+		HttpServerOptions httpServerOptions = new HttpServerOptions();
+		httpServerOptions.setSsl(true).setKeyStoreOptions(new JksOptions().setPath(pathToKeystore).setPassword(KEYSTORE_PASSWORD));
 
-		vertx.createHttpServer().requestHandler(getHttpRequestHandler()).websocketHandler(getWebsocketRequestHandler())
+		vertx.createHttpServer(httpServerOptions).requestHandler(getRouterWithConfiguredEventbus()::accept).listen(EVENTBUS_REQ_PORT);
+
+		vertx.createHttpServer(httpServerOptions).requestHandler(getHttpRequestHandler()).websocketHandler(getWebsocketRequestHandler())
 				.listen(WS_HTTP_REQ_PORT);
 
 		LogUtils.printMessageWithDate("Verticle started");
@@ -56,7 +68,7 @@ public class SecuredDemoVerticle extends AbstractVerticle {
 
 	private Handler<HttpServerRequest> getHttpRequestHandler() {
 		return reqHandler -> {
-			LogUtils.printMessageWithDate("PATH " + reqHandler.path());
+			LogUtils.printMessageWithDate("PATH " + reqHandler.path() + " -- isSSL: " + reqHandler.isSSL());
 			HttpServerResponse response = reqHandler.response();
 			response.setChunked(true);
 			response.putHeader("Content-Type", "text/html");
@@ -67,7 +79,7 @@ public class SecuredDemoVerticle extends AbstractVerticle {
 
 	private Handler<ServerWebSocket> getWebsocketRequestHandler() {
 		return wsHandler -> {
-			LogUtils.printMessageWithDate("WS socket created");
+			LogUtils.printMessageWithDate("WS socket created -- isSSL: " + wsHandler.isSsl());
 			wsHandler.textMessageHandler(message -> {
 				LogUtils.printMessageWithDate("Received something: " + message);
 			}).closeHandler(closeHandler -> {
