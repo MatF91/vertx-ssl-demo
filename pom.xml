@@ -1,0 +1,32 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>pl.mf</groupId>
+	<artifactId>vertx-ssl-demo</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>Vertx demo with SSL</name>
+	<description>SSL security is based on JKS keystore</description>
+
+	<properties>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+	</properties>
+
+	<dependencies>
+		<!-- https://mvnrepository.com/artifact/io.vertx/vertx-core -->
+		<dependency>
+			<groupId>io.vertx</groupId>
+			<artifactId>vertx-core</artifactId>
+			<version>3.5.1</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/io.vertx/vertx-web -->
+		<dependency>
+			<groupId>io.vertx</groupId>
+			<artifactId>vertx-web</artifactId>
+			<version>3.5.1</version>
+		</dependency>
+
+	</dependencies>
+</project>

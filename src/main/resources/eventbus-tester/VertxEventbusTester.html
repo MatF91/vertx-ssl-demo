@@ -1,0 +1,23 @@
+<script src="http://cdn.jsdelivr.net/sockjs/1.1.4/sockjs.min.js"></script>
+<script src='vertx-eventbus.js'></script>
+
+<script>
+
+var eb = new EventBus('http://localhost:8090/eventbus', {"vertxbus_ping_interval": 300000}); // sends ping every 5 minutes
+
+eb.onopen = function() {
+	console.log('Socket opened');
+}
+
+eb.onclose = function() {
+	console.log('Socket closed');
+}
+
+/*
+	EXAMPLE REQUEST
+
+	eb.send('demo-address', JSON.stringify({'field':'value'}), function(error, message) { console.log('message: ' + JSON.stringify(message)); })
+
+*/
+
+</script>
